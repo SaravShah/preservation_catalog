@@ -260,6 +260,84 @@ RSpec.describe PreservedCopy, type: :model do
     end
   end
 
+  context '.status_version_audit' do
+    let!(:unexpected_version) do
+      PreservedCopy.create!(
+        preserved_object_id: preserved_object.id,
+        endpoint_id: endpoint.id,
+        version: 1,
+        status: described_class::UNEXPECTED_VERSION_ON_STORAGE_STATUS,
+        size: 1,
+        last_version_audit: (Time.now.utc - 1.day)
+      )
+    end
+    let!(:validity_unknown) do
+      PreservedCopy.create!(
+        preserved_object_id: preserved_object.id,
+        endpoint_id: endpoint.id,
+        version: 1,
+        status: described_class::VALIDITY_UNKNOWN_STATUS,
+        size: 1,
+        last_version_audit: (Time.now.utc - 2.days)
+      )
+    end
+    let!(:ok) do
+      PreservedCopy.create!(
+        preserved_object_id: preserved_object.id,
+        endpoint_id: endpoint.id,
+        version: 1,
+        status: described_class::OK_STATUS,
+        size: 1,
+        last_version_audit: (Time.now.utc - 3.days)
+      )
+    end
+    let!(:invalid_moab) do
+      PreservedCopy.create!(
+        preserved_object_id: preserved_object.id,
+        endpoint_id: endpoint.id,
+        version: 1,
+        status: described_class::INVALID_MOAB_STATUS,
+        size: 1,
+        last_version_audit: (Time.now.utc - 3.days)
+      )
+    end
+    let!(:invalid_checksum) do
+      PreservedCopy.create!(
+        preserved_object_id: preserved_object.id,
+        endpoint_id: endpoint.id,
+        version: 1,
+        status: described_class::INVALID_CHECKSUM_STATUS,
+        size: 1,
+        last_version_audit: (Time.now.utc - 3.days)
+      )
+    end
+    let!(:no_moab) do
+      PreservedCopy.create!(
+        preserved_object_id: preserved_object.id,
+        endpoint_id: endpoint.id,
+        version: 1,
+        status: described_class::ONLINE_MOAB_NOT_FOUND_STATUS,
+        size: 1,
+        last_version_audit: (Time.now.utc - 3.days)
+      )
+    end
+    let!(:nil_timestamp_pc) { preserved_copy }
+    let!(:pcs_from_query) { PreservedCopy.status_version_audit }
+
+    it 'returns PreservedCopies with UNEXPECTED_VERSION_ON_STORAGE_STATUS and VALIDITY_UNKNOWN_STATUS only' do
+      expect(pcs_from_query).to include(nil_timestamp_pc, unexpected_version, validity_unknown)
+    end
+    it 'returns no PreservedCopies with other status' do
+      expect(pcs_from_query).not_to include ok
+      expect(pcs_from_query).not_to include invalid_moab
+      expect(pcs_from_query).not_to include invalid_checksum
+      expect(pcs_from_query).not_to include no_moab
+    end
+    it 'returns PreservedCopies with nils first, then old to new timestamps' do
+      expect(pcs_from_query).to eq [nil_timestamp_pc, validity_unknown, unexpected_version]
+    end
+  end
+
   context '.fixity_check_expired' do
     let(:fixity_ttl) { preserved_object.preservation_policy.fixity_ttl }
     let(:just_over_fixity_ttl) { fixity_ttl + 1.second }

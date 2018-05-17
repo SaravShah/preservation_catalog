@@ -64,6 +64,11 @@ class PreservedCopy < ApplicationRecord
     # to 0 for nulls, which sorts before 1 for non-nulls, which are then sorted by last_version_audit)
   }
 
+  scope :status_version_audit, lambda {
+    where(status: [UNEXPECTED_VERSION_ON_STORAGE_STATUS, VALIDITY_UNKNOWN_STATUS])
+      .order('last_version_audit IS NOT NULL, last_version_audit ASC')
+  }
+
   def update_audit_timestamps(moab_validated, version_audited)
     t = Time.current
     self.last_moab_validation = t if moab_validated
