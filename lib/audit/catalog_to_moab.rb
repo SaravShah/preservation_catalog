@@ -8,6 +8,7 @@ class CatalogToMoab
     delegate :logger, to: PreservationCatalog::Application
   end
 
+  # shameless green:  duplication with update_version_per_status_for_dir
   def self.check_version_on_dir(last_checked_b4_date, storage_dir, limit=Settings.c2m_sql_limit)
     logger.info "#{Time.now.utc.iso8601} C2M check_version starting for #{storage_dir}"
 
@@ -30,6 +31,7 @@ class CatalogToMoab
     profiler.print_results_flat('C2M_check_version_on_dir')
   end
 
+  # shameless green:  duplication with update_version_per_status_all_dirs
   def self.check_version_all_dirs(last_checked_b4_date)
     logger.info "#{Time.now.utc.iso8601} C2M check_version_all_dirs starting"
     HostSettings.storage_roots.each do |_strg_root_name, strg_root_location|
@@ -43,6 +45,31 @@ class CatalogToMoab
     profiler = Profiler.new
     profiler.prof { check_version_all_dirs(last_checked_b4_date) }
     profiler.print_results_flat('C2M_check_version_all_dirs')
+  end
+
+  # shameless green:  duplication with check_version_on_dir
+  def self.update_version_per_status_for_dir(storage_dir, limit=Settings.c2m_sql_limit)
+    logger.info "#{Time.now.utc.iso8601} C2M update_version_per_status starting for #{storage_dir}"
+    # pcs_to_audit_relation is an AR Relation; it could return a lot of results, so we want to process it in
+    # batches.  we can't use ActiveRecord's .find_each, because that'll disregard the order .least_recent_version_audit
+    # specified.  so we use our own batch processing method, which does respect Relation order.
+    pcs_to_audit_relation = PreservedCopy.status_version_audit.by_storage_location(storage_dir)
+    ActiveRecordUtils.process_in_batches(pcs_to_audit_relation, limit) do |pc|
+      c2m = CatalogToMoab.new(pc, storage_dir)
+      c2m.check_catalog_version
+    end
+  ensure
+    logger.info "#{Time.now.utc.iso8601} C2M update_version_per_status ended for '#{storage_dir}'"
+  end
+
+  # shameless green:  duplication with check_version_all_dirs
+  def self.update_version_per_status_all_dirs
+    logger.info "#{Time.now.utc.iso8601} C2M update_version_per_status for all storage roots starting'"
+    HostSettings.storage_roots.each do |_strg_root_name, strg_root_location|
+      update_version_per_status_for_dir("#{strg_root_location}/#{Settings.moab.storage_trunk}")
+    end
+  ensure
+    logger.info "#{Time.now.utc.iso8601} C2M update_version_per_status for all storage roots ended'"
   end
 
   # ----  INSTANCE code below this line ---------------------------
