@@ -56,7 +56,7 @@ class CatalogToMoab
     pcs_to_audit_relation = PreservedCopy.status_version_audit.by_storage_location(storage_dir)
     ActiveRecordUtils.process_in_batches(pcs_to_audit_relation, limit) do |pc|
       c2m = CatalogToMoab.new(pc, storage_dir)
-      c2m.check_catalog_version
+      c2m.update_catalog_version
     end
   ensure
     logger.info "#{Time.now.utc.iso8601} C2M update_version_per_status ended for '#{storage_dir}'"
@@ -136,6 +136,14 @@ class CatalogToMoab
       preserved_copy.save!
     end
     results.remove_db_updated_results unless transaction_ok
+  end
+
+  def update_catalog_version
+    results.check_name = 'update_catalog_version'
+    moab_version = moab.current_version_id
+    results.actual_version = moab_version
+    catalog_version = preserved_copy.version
+    # TODO: here is where we would call po_handler.update_version_after_validation
   end
 
   alias storage_location storage_dir
