@@ -120,7 +120,7 @@ task :m2c_exist_all_storage_roots, [:profile] => [:environment] do |_t, args|
   $stdout.flush
 end
 
-desc "Fire off c2m version check on a single storage root"
+desc "Fire off C2M version check on a single storage root"
 task :c2m_check_version_on_dir, [:last_checked_b4_date, :storage_root, :profile] => [:environment] do |_t, args|
   unless args[:profile] == 'profile' || args[:profile].nil?
     p "usage: rake c2m_check_version_on_dir[last_checked_b4_date, fixture_sr1] || rake c2m_check_version_on_dir[last_checked_b4_date,fixture_sr1,profile]"
@@ -144,7 +144,7 @@ task :c2m_check_version_on_dir, [:last_checked_b4_date, :storage_root, :profile]
   $stdout.flush
 end
 
-desc "Fire off c2m version check on all storage roots"
+desc "Fire off C2M version check on all storage roots"
 task :c2m_check_version_all_dirs, [:last_checked_b4_date, :profile] => [:environment] do |_t, args|
   unless args[:profile] == 'profile' || args[:profile].nil?
     p "usage: rake c2m_check_version_all_dirs[last_checked_b4_date] || rake c2m_check_version_all_dirs[last_checked_b4_date,profile]"
@@ -163,6 +163,26 @@ task :c2m_check_version_all_dirs, [:last_checked_b4_date, :profile] => [:environ
     p "You've entered an incorrect timestamp format #{last_checked}."
     p "Please enter correct timestamp format (UTC) (2018-02-01T18:54:48Z)"
   end
+  $stdout.flush
+end
+
+desc "Fire off C2M update version per status on a single storage root"
+task :c2m_update_version_per_status_for_dir, [:storage_root] => [:environment] do |_t, args|
+  unless args[:profile].nil?
+    p "Usage: rake update_version_per_status_for_dir[fixture_sr1]"
+    exit 1
+  end
+  root = args[:storage_root].to_sym
+  storage_dir = "#{HostSettings.storage_roots[root]}/#{Settings.moab.storage_trunk}"
+  CatalogToMoab.update_version_per_status_for_dir(storage_dir)
+  puts "#{Time.now.utc.iso8601} Catalog to Moab update version per status on #{storage_dir} is done."
+  $stdout.flush
+end
+
+desc "Fire off C2M update version per status on all storage roots"
+task :c2m_update_version_per_status_all_dirs => [:environment] do |_t, args|
+  CatalogToMoab.update_version_per_status_all_dirs
+  puts "#{Time.now.utc.iso8601} Catalog to Moab update version per status on all roots is done."
   $stdout.flush
 end
 
