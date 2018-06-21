@@ -13,10 +13,16 @@ class Endpoint < ApplicationRecord
     S3EastDeliveryJob => 2
   }
 
+  enum ep_type: [
+    'online',
+    'archive'
+  ]
+
   validates :endpoint_name, presence: true, uniqueness: true
   validates :endpoint_type, presence: true
   validates :endpoint_node, presence: true
   validates :storage_location, presence: true
+  # validates :type, presence: true
 
   scope :archive, lambda {
     joins(:endpoint_type).where(endpoint_types: { endpoint_class: 'archive' })
@@ -63,6 +69,7 @@ class Endpoint < ApplicationRecord
     HostSettings.storage_roots.map do |storage_root_name, storage_root_location|
       find_or_create_by!(endpoint_name: storage_root_name.to_s) do |endpoint|
         endpoint.endpoint_type = endpoint_type
+        endpoint.ep_type = endpoint_type.endpoint_class
         endpoint.endpoint_node = Settings.endpoints.storage_root_defaults.endpoint_node
         endpoint.storage_location = File.join(storage_root_location, Settings.moab.storage_trunk)
         endpoint.preservation_policies = preservation_policies
@@ -83,6 +90,7 @@ class Endpoint < ApplicationRecord
     Settings.archive_endpoints.map do |endpoint_name, endpoint_config|
       find_or_create_by!(endpoint_name: endpoint_name.to_s) do |endpoint|
         endpoint.endpoint_type = EndpointType.find_by!(type_name: endpoint_config.endpoint_type_name)
+        endpoint.ep_type = endpoint.endpoint_type.endpoint_class
         endpoint.endpoint_node = endpoint_config.endpoint_node
         endpoint.storage_location = endpoint_config.storage_location
         endpoint.preservation_policies = preservation_policies
