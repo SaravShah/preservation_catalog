@@ -103,7 +103,7 @@ class Endpoint < ApplicationRecord
     {
       endpoint_name: endpoint_name,
       endpoint_type_name: endpoint_type.type_name,
-      endpoint_type_class: endpoint_type.endpoint_class,
+      endpoint_type_class: ep_type,
       endpoint_node: endpoint_node,
       storage_location: storage_location
     }

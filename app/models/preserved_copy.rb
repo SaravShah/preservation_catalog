@@ -45,7 +45,7 @@ class PreservedCopy < ApplicationRecord
   }
 
   scope :by_endpoint_class, lambda { |ec|
-    joins(endpoint: [:endpoint_type]).where(endpoint_types: { endpoint_class: ec })
+    joins(:endpoint).where(endpoints: { ep_type: ec })
   }
 
   scope :for_archive_endpoints, -> { by_endpoint_class('archive') }
@@ -76,7 +76,7 @@ class PreservedCopy < ApplicationRecord
   # @todo reroute to large object pipeline instead of raise
   def replicate!
     raise 'PreservedCopy must be persisted' unless persisted?
-    raise 'Only online PCs can be replicated' unless endpoint.endpoint_type.online?
+    raise 'Only online PCs can be replicated' unless endpoint.online?
     raise "#{size} is too large for pipeline" if size > 9_999_500_000 # build in overhead for zip structure
     ZipmakerJob.perform_later(preserved_object.druid, version)
   end

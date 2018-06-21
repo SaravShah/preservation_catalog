@@ -35,6 +35,7 @@ RSpec.describe PreservedObjectHandler do
         diff_ep = Endpoint.create!(
           endpoint_name: 'diff_endpoint',
           endpoint_type: EndpointType.default_for_storage_roots,
+          ep_type: EndpointType.default_for_storage_roots.endpoint_class,
           endpoint_node: 'localhost',
           storage_location: 'blah'
         )

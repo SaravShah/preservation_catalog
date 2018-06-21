@@ -126,19 +126,14 @@ RSpec.describe PreservedObjectHandler do
           context 'ActiveRecordError' do
             let(:results) do
               allow(Rails.logger).to receive(:log)
-              po = instance_double('PreservedObject')
-              allow(po).to receive(:current_version).and_return(1)
+              po = instance_double('PreservedObject', current_version: 1)
               allow(PreservedObject).to receive(:find_by!).with(druid: druid).and_return(po)
-              pc = instance_double('PreservedCopy')
+              pc = instance_double('PreservedCopy', version: 1, status: 'ok', changed?: true, matches_po_current_version?: true)
               allow(PreservedCopy).to receive(:find_by!).with(preserved_object: po, endpoint: ep).and_return(pc)
-              allow(pc).to receive(:version).and_return(1)
               allow(pc).to receive(:upd_audstamps_version_size)
-              allow(pc).to receive(:status).and_return(PreservedCopy::OK_STATUS)
               allow(pc).to receive(:status=)
               allow(pc).to receive(:update_audit_timestamps)
-              allow(pc).to receive(:changed?).and_return(true)
               allow(pc).to receive(:save!).and_raise(ActiveRecord::ActiveRecordError, 'foo')
-              allow(pc).to receive(:matches_po_current_version?).and_return(true)
               po_handler.update_version
             end
 
@@ -476,22 +471,15 @@ RSpec.describe PreservedObjectHandler do
           context 'PreservedCopy' do
             context 'ActiveRecordError' do
               let(:results) do
-                allow(Rails.logger).to receive(:log)
-                po = instance_double('PreservedObject')
-                allow(po).to receive(:current_version).and_return(1)
-                allow(PreservedObject).to receive(:find_by!).with(druid: druid).and_return(po)
-                pc = instance_double('PreservedCopy')
+                pc = create(:preserved_copy, version: 1, status: 'ok')
                 allow(PreservedCopy).to receive(:find_by!).with(preserved_object: po, endpoint: ep).and_return(pc)
                 allow(pc).to receive(:version).and_return(1)
-                allow(pc).to receive(:version=)
-                allow(pc).to receive(:status).and_return(PreservedCopy::OK_STATUS)
-                allow(pc).to receive(:update_status)
-                allow(pc).to receive(:update_audit_timestamps)
                 allow(pc).to receive(:changed?).and_return(true)
                 allow(pc).to receive(:save!).and_raise(ActiveRecord::ActiveRecordError, 'foo')
-                allow(pc).to receive(:size=)
                 po_handler.update_version_after_validation
               end
+
+              before { allow(Rails.logger).to receive(:log) }
 
               context 'DB_UPDATE_FAILED error' do
                 it 'prefix' do

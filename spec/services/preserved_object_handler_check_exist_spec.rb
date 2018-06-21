@@ -222,6 +222,7 @@ RSpec.describe PreservedObjectHandler do
             # add storage root with the invalid moab to the Endpoints table
             Endpoint.find_or_create_by!(endpoint_name: 'bad_fixture_dir') do |endpoint|
               endpoint.endpoint_type = EndpointType.default_for_storage_roots
+              endpoint.ep_type = endpoint.endpoint_type.endpoint_class
               endpoint.endpoint_node = Settings.endpoints.storage_root_defaults.endpoint_node
               endpoint.storage_location = invalid_storage_dir
             end
@@ -547,6 +548,7 @@ RSpec.describe PreservedObjectHandler do
             # add storage root with the invalid moab to the Endpoints table
             Endpoint.find_or_create_by!(endpoint_name: 'bad_fixture_dir') do |endpoint|
               endpoint.endpoint_type = EndpointType.default_for_storage_roots
+              endpoint.ep_type = endpoint.endpoint_type.endpoint_class
               endpoint.endpoint_node = Settings.endpoints.storage_root_defaults.endpoint_node
               endpoint.storage_location = storage_dir
             end

@@ -10,9 +10,9 @@ class ResultsRecorderJob < ApplicationJob
   before_perform do |job|
     job.pcs ||= PreservedCopy
                 .by_druid(job.arguments.first)
-                .joins(endpoint: [:endpoint_type])
+                .joins(:endpoint)
                 .where(
-                  endpoint_types: { endpoint_class: 'archive' },
+                  endpoints: { ep_type: 'archive' },
                   preserved_copies: { version: job.arguments.second }
                 )
     job.pc ||= pcs.find_by!('endpoints.delivery_class' => Object.const_get(job.arguments.third))
