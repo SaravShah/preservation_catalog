@@ -50,13 +50,39 @@ RSpec.describe Endpoint, type: :model do
     let(:seed_ep) { described_class.archive.first }
     let(:online_ep) { create(:endpoint) }
 
+    it 'with no PCs, returns archive endpoint IDs w/ empty arrays' do
+      online = create(:endpoint) # should not be included
+      hash = described_class.ids_to_versions_found(po.druid)
+      expect(hash).to eq(seed_ep.id => [], endpoint.id => [])
+      expect(hash).not_to include(online.id)
+    end
+
+    it 'with only online PCs, returns archive endpoint IDs w/ empty arrays' do
+      online = create(:endpoint) # should not be included
+      hash = described_class.ids_to_versions_found(po.druid)
+      expect(hash).to eq(seed_ep.id => [], endpoint.id => [])
+      expect(hash).not_to include(online.id)
+    end
+  end
+  describe '.ids_to_versions_found' do
+    let(:po) { create :preserved_object, druid: druid, current_version: 3 }
+    let(:seed_ep) { described_class.archive.first }
+    let(:online_ep) { create(:endpoint) }
+
     before do
       po.preserved_copies.create!(
         (1..3).map { |v| { version: v, size: 1, status: 'ok', endpoint: endpoint } }
       )
+      po.preserved_copies.create!(
+        (1..4).map { |v| { version: v, size: 1, status: 'ok', endpoint: online_ep } }
+      )
       create(:preserved_object, current_version: 5).preserved_copies.create!( # unrelated PO keeps query honest
         (1..5).map { |v| { version: v, size: 1, status: 'ok', endpoint: endpoint } }
       )
+      create(:preserved_object, current_version: 6).preserved_copies.create!( # unrelated PO keeps query honest
+        (1..6).map { |v| { version: v, size: 1, status: 'ok', endpoint: online_ep } }
+      )
+      create(:preserved_object, current_version: 1).preserved_copies.create(attributes_for :preserved_copy)
     end
 
     it 'includes all relevant endpoint IDs, including those missing all versions' do
