@@ -69,35 +69,45 @@ RSpec.describe Endpoint, type: :model do
     let(:seed_ep) { described_class.archive.first }
     let(:online_ep) { create(:endpoint) }
 
-    before do
-      po.preserved_copies.create!(
-        (1..3).map { |v| { version: v, size: 1, status: 'ok', endpoint: endpoint } }
-      )
-      po.preserved_copies.create!(
-        (1..4).map { |v| { version: v, size: 1, status: 'ok', endpoint: online_ep } }
-      )
-      create(:preserved_object, current_version: 5).preserved_copies.create!( # unrelated PO keeps query honest
-        (1..5).map { |v| { version: v, size: 1, status: 'ok', endpoint: endpoint } }
-      )
-      create(:preserved_object, current_version: 6).preserved_copies.create!( # unrelated PO keeps query honest
-        (1..6).map { |v| { version: v, size: 1, status: 'ok', endpoint: online_ep } }
-      )
-      create(:preserved_object, current_version: 1).preserved_copies.create(attributes_for :preserved_copy)
+    context 'without archive PCs' do
+      before do
+        po.preserved_copies.create!(version: 3, size: 1, status: 'ok', endpoint: online_ep)
+      end
+      it 'returns empty hashes for each archive endpoint ID' do
+        expect(described_class.ids_to_versions_found(po.druid)).to eq(
+          seed_ep.id => [], endpoint.id => []
+        )
+      end
     end
 
-    it 'includes all relevant endpoint IDs, including those missing all versions' do
-      hash = described_class.ids_to_versions_found(po.druid)
-      expect(hash[seed_ep.id]).to eq []
-      expect(hash[endpoint.id].sort).to eq [1, 2, 3]
-    end
+    context 'with data' do
+      before do
+        po.preserved_copies.create!(version: 3, size: 1, status: 'ok', endpoint: online_ep)
+        po.preserved_copies.create!(
+          (1..3).map { |v| { version: v, size: 1, status: 'ok', endpoint: endpoint } }
+        )
+        other = create(:preserved_object, current_version: 5)
+        other.preserved_copies.create!( # unrelated PO keeps query honest
+          (1..5).map { |v| { version: v, size: 1, status: 'ok', endpoint: endpoint } }
+        )
+        other.preserved_copies.create!(version: 5, size: 1, status: 'ok', endpoint: online_ep)
+        create(:preserved_object, current_version: 2).preserved_copies.create!(version: 2, size: 1, status: 'ok', endpoint: online_ep)
+      end
 
-    it 'includes all relevant endpoint IDs and their found versions' do
-      po.preserved_copies.create!(
-        (2..3).map { |v| { version: v, size: 1, status: 'ok', endpoint: seed_ep } }
-      )
-      hash = described_class.ids_to_versions_found(po.druid)
-      expect(hash[endpoint.id].sort).to eq([1, 2, 3])
-      expect(hash[seed_ep.id].sort).to eq([2, 3])
+      it 'includes all relevant endpoint IDs, including those missing all versions' do
+        hash = described_class.ids_to_versions_found(po.druid)
+        expect(hash[seed_ep.id]).to eq []
+        expect(hash[endpoint.id].sort).to eq [1, 2, 3]
+      end
+
+      it 'includes all relevant endpoint IDs and their found versions' do
+        po.preserved_copies.create!(
+          (2..3).map { |v| { version: v, size: 1, status: 'ok', endpoint: seed_ep } }
+        )
+        hash = described_class.ids_to_versions_found(po.druid)
+        expect(hash[endpoint.id].sort).to eq([1, 2, 3])
+        expect(hash[seed_ep.id].sort).to eq([2, 3])
+      end
     end
   end
 
