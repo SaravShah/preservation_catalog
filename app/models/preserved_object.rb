@@ -25,5 +25,16 @@ class PreservedObject < ApplicationRecord
   def check_endpoints!
     # FIXME: STUB
     # Ticket: 920
+    preserved_copy = self.preserved_copies.first # an array
+    unless preserved_copy.ok?
+      # log something here and return
+    end
+    actual_archive_pc = preserved_copy.archive_preserved_copies
+    expected_archive_pc = # some query
+
+    return expected_archive_pc.all?(&:ok?)
+
+    expected_archive_pc.collect { |apc| apc.nil? }
+    # can compare counts if they're the same then check statuses?
   end
 end

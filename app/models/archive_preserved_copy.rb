@@ -23,7 +23,7 @@ class ArchivePreservedCopy < ApplicationRecord
 
   validates :archive_endpoint, presence: true
   validates :preserved_copy, presence: true
-  validates :status, inclusion: { in: statuses.keys }
+  validates :status, presence: true
   validates :version, presence: true
 
   scope :by_druid, lambda { |druid|

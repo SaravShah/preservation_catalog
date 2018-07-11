@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180705234907) do
+ActiveRecord::Schema.define(version: 20180711234006) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -107,8 +107,10 @@ ActiveRecord::Schema.define(version: 20180705234907) do
     t.bigint "size"
     t.integer "status", null: false
     t.datetime "last_version_audit"
+    t.datetime "last_archive_validation"
     t.index ["created_at"], name: "index_preserved_copies_on_created_at"
     t.index ["endpoint_id"], name: "index_preserved_copies_on_endpoint_id"
+    t.index ["last_archive_validation"], name: "index_preserved_copies_on_last_archive_validation"
     t.index ["last_checksum_validation"], name: "index_preserved_copies_on_last_checksum_validation"
     t.index ["last_moab_validation"], name: "index_preserved_copies_on_last_moab_validation"
     t.index ["last_version_audit"], name: "index_preserved_copies_on_last_version_audit"
