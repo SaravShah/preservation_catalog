@@ -77,6 +77,48 @@ class PreservedCopy < ApplicationRecord
     # to 0 for nulls, which sorts before 1 for non-nulls, which are then sorted by last_checksum_validation)
   }
 
+  scope :archive_check_expired, lambda {
+    joins(:preserved_object)
+      .joins(
+        'INNER JOIN preservation_policies'\
+        ' ON preservation_policies.id = preserved_objects.preservation_policy_id'\
+        ' AND (last_archive_validation + (archive_ttl * INTERVAL \'1 SECOND\')) < CURRENT_TIMESTAMP'\
+        ' OR last_archive_validation IS NULL'
+      )
+  }
+
+  # Spawn asynchronous checks of all existing archive preserved_copies.
+  # This logic is similar to PlexerJob, for a different purpose.
+  # This should implement the start of the replication process if status is unreplicated for an archival pres_copy
+  # Compare last_existence_check (from archive pres_copy) with archive TTL when checking the archival pres_copy status
+  # Log an error message.
+  # Calls ReplicatedFileCheckJob
+  # This builds off of #917
+  def check_endpoints!
+    # FIXME: STUB
+    # Ticket: 920
+    pcs = self.archive_check_expired
+    p pcs
+    p pcs.count
+
+    unless self.ok?
+      return "STATUS IS NOT OK" # some sort of error- log
+    end
+    total_version = 1..self.version
+  
+
+    total_version.each do |ver|
+      self.create_archive_preserved_copies!(ver) if ArchiveEndpoint.which_need_archive_copy(self.druid, ver)
+    end
+
+
+
+    # return expected_archive_pc.all?(&:ok?)
+
+    # expected_archive_pc.collect { |apc| apc.nil? }
+    # can compare counts if they're the same then check statuses?
+  end
+
   # given a version, create any ArchivePreservedCopy records for that version which don't yet exist for archive
   #  endpoints which implement the parent PreservedObject's PreservationPolicy.
   # @param archive_vers [Integer] the version for which archive preserved copies should be created.  must be between

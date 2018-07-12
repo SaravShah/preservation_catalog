@@ -14,27 +14,4 @@ class PreservedObject < ApplicationRecord
             format: { with: /(?!#{PREFIX_RE})#{DruidTools::Druid.pattern}/ } # ?! group is a *negative* match
   validates :current_version, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :preservation_policy, null: false
-
-  # Spawn asynchronous checks of all existing archive preserved_copies.
-  # This logic is similar to PlexerJob, for a different purpose.
-  # This should implement the start of the replication process if status is unreplicated for an archival pres_copy
-  # Compare last_existence_check (from archive pres_copy) with archive TTL when checking the archival pres_copy status
-  # Log an error message.
-  # Calls ReplicatedFileCheckJob
-  # This builds off of #917
-  def check_endpoints!
-    # FIXME: STUB
-    # Ticket: 920
-    preserved_copy = self.preserved_copies.first # an array
-    unless preserved_copy.ok?
-      # log something here and return
-    end
-    actual_archive_pc = preserved_copy.archive_preserved_copies
-    expected_archive_pc = # some query
-
-    return expected_archive_pc.all?(&:ok?)
-
-    expected_archive_pc.collect { |apc| apc.nil? }
-    # can compare counts if they're the same then check statuses?
-  end
 end
