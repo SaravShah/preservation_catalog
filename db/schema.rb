@@ -10,7 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180712203748) do
+ActiveRecord::Schema.define(version: 20180712213532) do
+
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -26,19 +27,6 @@ ActiveRecord::Schema.define(version: 20180712203748) do
     t.index ["preserved_copy_id"], name: "index_archive_preserved_copies_on_preserved_copy_id"
     t.index ["status"], name: "index_archive_preserved_copies_on_status"
     t.index ["zip_endpoint_id"], name: "index_archive_preserved_copies_on_zip_endpoint_id"
-  end
-
-  create_table "archive_preserved_copy_parts", force: :cascade do |t|
-    t.bigint "size"
-    t.bigint "archive_preserved_copy_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "md5", null: false
-    t.string "create_info", null: false
-    t.integer "parts_count", null: false
-    t.string "suffix", null: false
-    t.integer "status", default: 1, null: false
-    t.index ["archive_preserved_copy_id"], name: "index_archive_preserved_copy_parts_on_archive_preserved_copy_id"
   end
 
   create_table "endpoints", force: :cascade do |t|
@@ -118,9 +106,21 @@ ActiveRecord::Schema.define(version: 20180712203748) do
     t.index ["endpoint_name"], name: "index_zip_endpoints_on_endpoint_name", unique: true
   end
 
+  create_table "zip_parts", force: :cascade do |t|
+    t.bigint "size"
+    t.bigint "archive_preserved_copy_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "md5", null: false
+    t.string "create_info", null: false
+    t.integer "parts_count", null: false
+    t.string "suffix", null: false
+    t.integer "status", default: 1, null: false
+    t.index ["archive_preserved_copy_id"], name: "index_zip_parts_on_archive_preserved_copy_id"
+  end
+
   add_foreign_key "archive_preserved_copies", "preserved_copies"
   add_foreign_key "archive_preserved_copies", "zip_endpoints"
-  add_foreign_key "archive_preserved_copy_parts", "archive_preserved_copies"
   add_foreign_key "endpoints_preservation_policies", "endpoints"
   add_foreign_key "endpoints_preservation_policies", "preservation_policies"
   add_foreign_key "preservation_policies_zip_endpoints", "preservation_policies"
@@ -128,4 +128,5 @@ ActiveRecord::Schema.define(version: 20180712203748) do
   add_foreign_key "preserved_copies", "endpoints"
   add_foreign_key "preserved_copies", "preserved_objects"
   add_foreign_key "preserved_objects", "preservation_policies"
+  add_foreign_key "zip_parts", "archive_preserved_copies"
 end
