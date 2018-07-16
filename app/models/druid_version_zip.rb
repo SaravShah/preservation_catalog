@@ -136,7 +136,7 @@ class DruidVersionZip
 
   # @return [String] the option included with "zip -s"
   def zip_split_size
-    '10g'
+    '64k'
   end
 
   def zip_version_regexp
