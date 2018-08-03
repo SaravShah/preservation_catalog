@@ -9,6 +9,7 @@ end
 gem 'aws-sdk-s3', '~> 1.17'
 gem 'config' # Settings to manage configs on different instances
 gem 'dor-workflow-service' # audit errors are reported to the workflow service
+gem 'file-find'
 gem 'honeybadger' # for error reporting / tracking / notifications
 gem 'jbuilder', '~> 2.5' # Build JSON APIs with ease.
 gem 'okcomputer' # ReST endpoint with upness status

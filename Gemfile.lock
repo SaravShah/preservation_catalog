@@ -162,6 +162,8 @@ GEM
     faraday (0.15.2)
       multipart-post (>= 1.2, < 3)
     ffi (1.9.25)
+    file-find (0.3.9)
+      sys-admin (>= 1.6.0)
     globalid (0.4.1)
       activesupport (>= 4.2.0)
     hashdiff (0.3.7)
@@ -327,6 +329,8 @@ GEM
     sshkit (1.17.0)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
+    sys-admin (1.7.1)
+      ffi (>= 1.1.0)
     term-ansicolor (1.6.0)
       tins (~> 1.0)
     thor (0.19.4)
@@ -361,6 +365,7 @@ DEPENDENCIES
   dor-workflow-service
   druid-tools
   factory_bot_rails (~> 4.0)
+  file-find
   hirb
   honeybadger
   jbuilder (~> 2.5)
