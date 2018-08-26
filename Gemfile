@@ -24,6 +24,7 @@ gem 'resque-lock' # deduplication of worker queue jobs
 gem 'resque-pool'
 gem 'ruby-prof' # to profile methods
 gem 'whenever' # manage cron for audit checks
+gem 'redis', :git => 'https://github.com/redis/redis-rb.git', :branch => 'master'
 
 # Stanford gems
 gem 'moab-versioning' # work with Moab Objects
