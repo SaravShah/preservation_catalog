@@ -16,7 +16,19 @@ class MoabReplicationAuditJob < ApplicationJob
     backfill_missing_zmvs(complete_moab, results) if Settings.replication.audit_should_backfill
 
     complete_moab.zipped_moab_versions.each do |zmv|
+      # Leave the part of MoabReplicationAuditJob that checks parts count consistency etc as-is.
       next unless check_child_zip_part_attributes(zmv, results)
+      # Remove direct invocation of the method that checks the state of the ZippedMoabVersions (and their ZipParts) on the cloud.
+      # Instead, introduce a new worker class for each S3 endpoint
+      # for example, ZippedMoabVersionAuditWestJob, ZippedMoabVersionAuditEastJob
+      # figure out which endpoint name and send to the appropriate worker
+      # endpoint_name = zmv.zip_endpoint.endpoint_name
+      # case endpoint_name
+      # when 'aws_s3_west_2'
+      #   ZippedMoabVersionAuditWestJob.perform_later(zmv)
+      # when 'aws_s3_east_1'
+      #   ZippedMoabVersionAuditEastJob.perform_later(zmv)
+      # end
       check_aws_replicated_zipped_moab_version(zmv, results)
     end
 
