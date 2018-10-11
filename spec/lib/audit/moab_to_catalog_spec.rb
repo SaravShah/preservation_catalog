@@ -3,14 +3,9 @@ require 'rails_helper'
 RSpec.describe Audit::MoabToCatalog do
   let(:storage_dir) { 'spec/fixtures/storage_root01/sdr2objects' }
   let(:ms_root) { MoabStorageRoot.find_by!(storage_location: storage_dir) }
-  let(:moab) do
-    m = instance_double(Moab::StorageObject, object_pathname: storage_dir, :storage_root= => nil)
-    allow(Moab::StorageObject).to receive(:new).and_return(m)
-    m
-  end
+  # let(:ms_root) { build(:moab_storage_root, storage_location: storage_dir) }
 
   before do
-    PreservationPolicy.seed_from_config
     allow(described_class.logger).to receive(:info) # silence STDOUT chatter
     allow(Dor::WorkflowService).to receive(:update_workflow_error_status)
   end
@@ -52,7 +47,7 @@ RSpec.describe Audit::MoabToCatalog do
       described_class.check_existence_for_druid(druid)
     end
     it 'calls pohandler.check_existence' do
-      po_handler = instance_double('PreservedObjectHandler')
+      po_handler = instance_double(PreservedObjectHandler)
       expect(PreservedObjectHandler).to receive(:new).with(
         druid,
         3, # current_version
@@ -66,6 +61,7 @@ RSpec.describe Audit::MoabToCatalog do
     it 'returns results' do
       expect(described_class.check_existence_for_druid(druid)).to eq results
     end
+
     context 'given a druid that does not exist' do
       let(:druid) { 'db102hs2345' }
 
@@ -87,9 +83,16 @@ RSpec.describe Audit::MoabToCatalog do
   end
 
   describe ".seed_catalog_for_dir" do
+    let(:moab) do
+      instance_double(Moab::StorageObject, object_pathname: storage_dir, :storage_root= => nil).tap do |m|
+        allow(Moab::StorageObject).to receive(:new).and_return(m)
+      end
+    end
+
     it "calls 'find_moab_paths' with appropriate argument" do
-      expect(Stanford::MoabStorageDirectory).to receive(:find_moab_paths).with(storage_dir)
-      described_class.seed_catalog_for_dir(storage_dir)
+      allow(MoabStorageRoot).to receive(:find_by!).with(storage_location: 'foo')
+      expect(Stanford::MoabStorageDirectory).to receive(:find_moab_paths).with('foo')
+      described_class.seed_catalog_for_dir('foo')
     end
 
     it 'gets moab size and current version from Moab::StorageObject' do
@@ -110,7 +113,7 @@ RSpec.describe Audit::MoabToCatalog do
 
       before do
         expected_argument_list.each do |arg_hash|
-          po_handler = instance_double('PreservedObjectHandler')
+          po_handler = instance_double(PreservedObjectHandler)
           arg_hash[:po_handler] = po_handler
           allow(PreservedObjectHandler).to receive(:new).with(
             arg_hash[:druid],
